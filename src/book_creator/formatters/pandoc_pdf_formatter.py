@@ -242,8 +242,8 @@ class PandocPDFFormatter:
         finally:
             try:
                 os.unlink(tmp_md_path)
-            except OSError:
-                # Ignore errors if the temp file was already deleted or cannot be removed
+            except FileNotFoundError:
+                # Ignore errors if the temp file was already deleted
                 pass
     
     def get_supported_themes(self) -> list[str]:
