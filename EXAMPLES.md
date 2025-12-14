@@ -210,3 +210,170 @@ for book_file in book_files:
     
     print(f"✓ Completed: {book.title}")
 ```
+
+## Example 7: Using Different LLM Providers (NEW!)
+
+```bash
+# Create a book using OpenAI GPT-4
+book-creator create \
+  --topic "Machine Learning Fundamentals" \
+  --provider openai \
+  --output ml-book-openai.json
+
+# Create a book using Anthropic Claude
+book-creator create \
+  --topic "Data Science with Python" \
+  --provider anthropic \
+  --output ds-book-claude.json
+
+# Create a book using Google Gemini
+book-creator create \
+  --topic "Web Development with React" \
+  --provider google \
+  --output react-book-gemini.json
+
+# Create a book using Cohere
+book-creator create \
+  --topic "Natural Language Processing" \
+  --provider cohere \
+  --output nlp-book-cohere.json
+
+# Create a book using Mistral AI
+book-creator create \
+  --topic "Deep Learning Basics" \
+  --provider mistral \
+  --output dl-book-mistral.json
+
+# Create a book using local Ollama models (no API key needed!)
+book-creator create \
+  --topic "JavaScript Fundamentals" \
+  --provider ollama \
+  --output js-book-local.json
+
+# Generate content with a specific provider
+book-creator generate \
+  --input my-book.json \
+  --provider google \
+  --chapter 3
+```
+
+## Example 8: Automated Book Editing (NEW!)
+
+```bash
+# Validate all cross-references in your book
+book-creator validate-references --input my-book.json
+
+# Check for content consistency issues
+book-creator check-consistency --input my-book.json
+
+# Generate an index of important terms
+book-creator generate-index \
+  --input my-book.json \
+  --provider openai
+
+# Generate a glossary with AI-powered definitions
+book-creator generate-glossary \
+  --input my-book.json \
+  --provider anthropic
+
+# Add learning objectives to all chapters
+book-creator add-objectives \
+  --input my-book.json \
+  --provider google
+
+# Format all code examples to follow PEP 8
+book-creator format-code \
+  --input python-book.json \
+  --style "PEP 8" \
+  --provider openai
+
+# Format JavaScript code to follow Airbnb style guide
+book-creator format-code \
+  --input js-book.json \
+  --style "Airbnb" \
+  --provider openai
+```
+
+## Example 9: Complete Workflow with New Features
+
+```bash
+# Step 1: Create book with Google Gemini
+book-creator create \
+  --topic "Rust Programming Guide" \
+  --chapters 12 \
+  --language Rust \
+  --provider google \
+  --output rust-book.json
+
+# Step 2: Generate content for all chapters
+book-creator generate \
+  --input rust-book.json \
+  --provider google
+
+# Step 3: Add learning objectives
+book-creator add-objectives \
+  --input rust-book.json \
+  --provider google
+
+# Step 4: Generate glossary
+book-creator generate-glossary \
+  --input rust-book.json \
+  --provider google
+
+# Step 5: Generate index
+book-creator generate-index \
+  --input rust-book.json \
+  --provider google
+
+# Step 6: Check consistency
+book-creator check-consistency --input rust-book.json
+
+# Step 7: Validate references
+book-creator validate-references --input rust-book.json
+
+# Step 8: Check and fix grammar
+book-creator check --input rust-book.json --fix --provider google
+
+# Step 9: Format code examples
+book-creator format-code \
+  --input rust-book.json \
+  --style "Rust standard" \
+  --provider google
+
+# Step 10: Export to all formats
+book-creator export --input rust-book.json --format html
+book-creator export --input rust-book.json --format pdf
+book-creator export --input rust-book.json --format epub
+book-creator export --input rust-book.json --format markdown
+```
+
+## Example 10: Using Local Models with Ollama
+
+```bash
+# Install Ollama first: https://ollama.ai
+# Pull a model: ollama pull llama2
+
+# Create a book entirely with local models (no API costs!)
+book-creator create \
+  --topic "Python for Beginners" \
+  --chapters 10 \
+  --provider ollama \
+  --output python-beginner.json
+
+# Generate content locally
+book-creator generate \
+  --input python-beginner.json \
+  --provider ollama
+
+# Add learning objectives locally
+book-creator add-objectives \
+  --input python-beginner.json \
+  --provider ollama
+
+# Generate glossary locally
+book-creator generate-glossary \
+  --input python-beginner.json \
+  --provider ollama
+
+# This works completely offline and has no API costs!
+```
