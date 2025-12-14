@@ -4,7 +4,6 @@ Command-line interface for the book creator tool
 
 import click
 import os
-import json
 from typing import Optional
 
 from .models.book import Book, Chapter, Section

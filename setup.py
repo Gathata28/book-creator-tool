@@ -36,9 +36,6 @@ setup(
         "click>=8.1.0",
         "pyyaml>=6.0",
         "pygments>=2.17.0",
-        "langchain>=0.1.0",
-        "langchain-openai>=0.0.2",
-        "langchain-anthropic>=0.1.0",
     ],
     entry_points={
         "console_scripts": [
