@@ -45,7 +45,12 @@ A comprehensive platform for crafting professional coding books with AI and Larg
 ### 📤 Customizable Publishing
 - **Multiple Export Formats**: 
   - HTML (with beautiful, responsive design)
-  - PDF (professional book layout)
+  - PDF (professional book layout via FPDF)
+  - **PDF-Pandoc (NEW!)**: High-quality PDF with Pandoc
+    - Strict Markdown validation
+    - Color-coded syntax highlighting
+    - Multiple themes (tango, pygments, kate, etc.)
+    - Professional typography with XeLaTeX
   - EPUB (e-reader compatible)
   - Markdown (portable and editable)
 - **Custom Templates**: Fully customizable formatting and styling
@@ -55,6 +60,8 @@ A comprehensive platform for crafting professional coding books with AI and Larg
 
 ### Prerequisites
 - Python 3.8 or higher
+- **Pandoc** (for high-quality PDF generation) - [Install Guide](https://pandoc.org/installing.html)
+- **XeLaTeX** (for Pandoc PDF generation) - Usually included with TeX Live
 - API key for at least one LLM provider:
   - OpenAI API key
   - Anthropic API key
@@ -63,6 +70,21 @@ A comprehensive platform for crafting professional coding books with AI and Larg
   - Mistral API key
   - HuggingFace API key
   - Or use Ollama for local models (no API key needed)
+
+### Install Pandoc (Required for PDF-Pandoc export)
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install pandoc texlive-xetex
+
+# macOS
+brew install pandoc
+brew install --cask mactex
+
+# Windows
+# Download from https://pandoc.org/installing.html
+# Download MiKTeX from https://miktex.org/
+```
 
 ### Install from Source
 
@@ -188,8 +210,14 @@ book-creator format-code \
 # Export to HTML
 book-creator export --input my-book.json --format html
 
-# Export to PDF
+# Export to PDF (basic)
 book-creator export --input my-book.json --format pdf
+
+# Export to PDF with Pandoc (high-quality, syntax highlighting) 🆕
+book-creator export --input my-book.json --format pdf-pandoc --theme tango
+
+# Export to PDF with Pandoc (strict validation)
+book-creator export --input my-book.json --format pdf-pandoc --strict --theme pygments
 
 # Export to EPUB
 book-creator export --input my-book.json --format epub
