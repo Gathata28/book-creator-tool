@@ -3,7 +3,6 @@ PDF formatter for exporting books to PDF
 """
 
 import os
-from typing import Optional
 from fpdf import FPDF
 from ..models.book import Book
 

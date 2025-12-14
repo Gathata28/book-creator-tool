@@ -3,7 +3,6 @@ EPUB formatter for exporting books to EPUB format
 """
 
 import os
-from typing import Optional
 from ebooklib import epub
 from ..models.book import Book
 
