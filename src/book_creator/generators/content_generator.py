@@ -138,7 +138,7 @@ Write the summary now:
         # Generate content for each section
         for section in chapter.sections:
             if not section.content:
-                section = self.generate_section_content(
+                self.generate_section_content(
                     section,
                     chapter_context=chapter.introduction,
                     programming_language=programming_language,

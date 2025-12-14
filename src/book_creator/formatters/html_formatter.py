@@ -117,7 +117,7 @@ class HTMLFormatter:
             lexer = get_lexer_by_name(language, stripall=True)
             formatter = HtmlFormatter(style='colorful', noclasses=True)
             highlighted = highlight(code, lexer, formatter)
-        except:
+        except Exception:
             highlighted = f'<pre><code>{code}</code></pre>'
 
         html = f"""

@@ -3,7 +3,7 @@ Book editor for automating editing tasks on existing books
 """
 
 from typing import List, Dict, Any, Optional
-from ..models.book import Book, Chapter, Section
+from ..models.book import Book
 from ..utils.llm_client import LLMClient, LLMConfig
 
 
@@ -192,6 +192,7 @@ class BookEditor:
                                             f"Broken reference: '{ref}' in {chapter.title}/{section.title}"
                                         )
                                 except ValueError:
+                                    # Not a valid chapter number after "Chapter"; skip this word
                                     pass
         
         return broken_refs

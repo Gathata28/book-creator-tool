@@ -3,7 +3,8 @@ LLM configuration and client management
 """
 
 import os
-from typing import Optional, Dict, Any
+import logging
+from typing import Optional
 from enum import Enum
 
 
@@ -73,10 +74,11 @@ class LLMConfig:
 
 
 class LLMClient:
-    """Client for interacting with LLM providers"""
+    """Client for interacting with various LLM providers"""
     
     def __init__(self, config: LLMConfig):
         self.config = config
+        self.logger = logging.getLogger(__name__)
         self._client = self._initialize_client()
 
     def _initialize_client(self):
@@ -160,8 +162,8 @@ class LLMClient:
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error generating text with OpenAI: {e}")
-            return ""
+            self.logger.error(f"Error generating text with OpenAI: {e}")
+            raise
 
     def _generate_anthropic(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text using Anthropic"""
@@ -175,8 +177,8 @@ class LLMClient:
             )
             return response.content[0].text
         except Exception as e:
-            print(f"Error generating text with Anthropic: {e}")
-            return ""
+            self.logger.error(f"Error generating text with Anthropic: {e}")
+            raise
 
     def _generate_google(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text using Google Gemini"""
@@ -192,8 +194,8 @@ class LLMClient:
             )
             return response.text
         except Exception as e:
-            print(f"Error generating text with Google: {e}")
-            return ""
+            self.logger.error(f"Error generating text with Google: {e}")
+            raise
 
     def _generate_cohere(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text using Cohere"""
@@ -207,8 +209,8 @@ class LLMClient:
             )
             return response.generations[0].text
         except Exception as e:
-            print(f"Error generating text with Cohere: {e}")
-            return ""
+            self.logger.error(f"Error generating text with Cohere: {e}")
+            raise
 
     def _generate_mistral(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text using Mistral AI"""
@@ -227,8 +229,8 @@ class LLMClient:
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error generating text with Mistral: {e}")
-            return ""
+            self.logger.error(f"Error generating text with Mistral: {e}")
+            raise
 
     def _generate_huggingface(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text using HuggingFace"""
@@ -242,8 +244,8 @@ class LLMClient:
             )
             return response
         except Exception as e:
-            print(f"Error generating text with HuggingFace: {e}")
-            return ""
+            self.logger.error(f"Error generating text with HuggingFace: {e}")
+            raise
 
     def _generate_ollama(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text using Ollama (local models)"""
@@ -263,8 +265,8 @@ class LLMClient:
             )
             return response['message']['content']
         except Exception as e:
-            print(f"Error generating text with Ollama: {e}")
-            return ""
+            self.logger.error(f"Error generating text with Ollama: {e}")
+            raise
 
     async def generate_text_async(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """Generate text asynchronously"""

@@ -2,7 +2,6 @@
 Tests for formatters
 """
 
-import pytest
 import tempfile
 import os
 

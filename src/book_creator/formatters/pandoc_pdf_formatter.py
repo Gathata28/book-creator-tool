@@ -79,13 +79,8 @@ class PandocPDFFormatter:
                 if len(stripped_line) > 1 and stripped_line[1] not in [' ', '*', '-', '+']:
                     errors.append(f"Line {i}: List marker should be followed by a space")
             
-            # Check for unescaped special characters in wrong context
-            if re.search(r'(?<!\\)(?:\\\\)*\[(?![^\]]*\]\([^\)]*\))', line):
-                # This is a simplified check for unclosed links
-                pass  # Too complex to check properly without full parser
         
         # Check for proper link syntax
-        link_pattern = r'\[([^\]]+)\]\(([^\)]+)\)'
         for match in re.finditer(r'\[[^\]]*\](?!\()', markdown_content):
             # Found a bracket without matching parenthesis
             context = markdown_content[max(0, match.start()-20):match.end()+20]
@@ -143,7 +138,8 @@ class PandocPDFFormatter:
                     # Clean up temp file
                     try:
                         os.unlink(tmp_md_path)
-                    except:
+                    except FileNotFoundError:
+                        # It's safe to ignore if the temp file was already deleted
                         pass
                     raise ValueError(error_msg)
                 else:
@@ -192,7 +188,8 @@ class PandocPDFFormatter:
             # Clean up temporary file
             try:
                 os.unlink(tmp_md_path)
-            except:
+            except FileNotFoundError:
+                # It's safe to ignore if the temp file was already deleted
                 pass
     
     def format_with_custom_template(self, book: Book, output_path: str,
@@ -245,7 +242,8 @@ class PandocPDFFormatter:
         finally:
             try:
                 os.unlink(tmp_md_path)
-            except:
+            except OSError:
+                # Ignore errors if the temp file was already deleted or cannot be removed
                 pass
     
     def get_supported_themes(self) -> list[str]:
