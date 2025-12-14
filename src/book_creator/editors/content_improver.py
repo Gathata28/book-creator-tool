@@ -3,7 +3,7 @@ Content improver for enhancing book content
 """
 
 from typing import Optional, Dict, Any
-from ..models.book import Section, Chapter
+from ..models.book import Section
 from ..utils.llm_client import LLMClient, LLMConfig
 
 

@@ -4,9 +4,8 @@ Command-line interface for the book creator tool
 
 import click
 import os
-from typing import Optional
 
-from .models.book import Book, Chapter, Section
+from .models.book import Book
 from .generators.outline_generator import OutlineGenerator
 from .generators.content_generator import ContentGenerator
 from .generators.code_generator import CodeGenerator

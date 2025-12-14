@@ -2,11 +2,9 @@
 Basic tests for book creator tool models
 """
 
-import pytest
 import json
 import tempfile
 import os
-from datetime import datetime
 
 from book_creator.models.book import Book, Chapter, Section
 

@@ -2,7 +2,7 @@
 Outline generator for creating book structures
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Optional
 from ..models.book import Book, Chapter, Section
 from ..utils.llm_client import LLMClient, LLMConfig
 

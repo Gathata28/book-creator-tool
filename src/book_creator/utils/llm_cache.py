@@ -9,7 +9,8 @@ import hashlib
 import json
 import os
 from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
+from datetime import datetime
+import logging
 
 
 class LLMCache:
@@ -42,6 +43,7 @@ class LLMCache:
         self.ttl_seconds = ttl_days * 24 * 3600
         self.similarity_threshold = similarity_threshold
         self.enable_semantic = enable_semantic
+        self.logger = logging.getLogger(__name__)
         
         self._redis_client = None
         self._embeddings_model = None
@@ -61,15 +63,15 @@ class LLMCache:
             self._redis_client = redis.from_url(self.redis_url, decode_responses=True)
             # Test connection
             self._redis_client.ping()
-            print(f"✓ Redis cache connected: {self.redis_url}")
+            self.logger.info(f"Redis cache connected: {self.redis_url}")
         except ImportError:
-            print("⚠ Redis not installed. Install with: pip install redis")
-            print("  Falling back to in-memory cache")
+            self.logger.warning("Redis not installed. Install with: pip install redis")
+            self.logger.info("Falling back to in-memory cache")
             self._redis_client = None
             self._memory_cache = {}
         except Exception as e:
-            print(f"⚠ Redis connection failed: {e}")
-            print("  Falling back to in-memory cache")
+            self.logger.warning(f"Redis connection failed: {e}")
+            self.logger.info("Falling back to in-memory cache")
             self._redis_client = None
             self._memory_cache = {}
         
@@ -78,11 +80,10 @@ class LLMCache:
             try:
                 from sentence_transformers import SentenceTransformer
                 self._embeddings_model = SentenceTransformer('all-MiniLM-L6-v2')
-                print("✓ Semantic caching enabled (all-MiniLM-L6-v2)")
+                self.logger.info("Semantic caching enabled (all-MiniLM-L6-v2)")
             except ImportError:
-                print("⚠ sentence-transformers not installed")
-                print("  Install with: pip install sentence-transformers")
-                print("  Semantic caching disabled")
+                self.logger.warning("sentence-transformers not installed. Install with: pip install sentence-transformers")
+                self.logger.info("Semantic caching disabled")
                 self.enable_semantic = False
     
     def _hash_prompt(self, prompt: str, params: Dict[str, Any]) -> str:
@@ -313,7 +314,8 @@ def estimate_cost(prompt: str, response: str, model: str = "gpt-4") -> float:
     """
     Estimate API cost for a request
     
-    Rough estimates (as of 2024):
+    NOTE: These are approximate estimates and should be verified against current pricing.
+    Rough estimates (subject to change):
     - GPT-4: $0.03/1k input tokens, $0.06/1k output tokens
     - GPT-3.5: $0.001/1k input tokens, $0.002/1k output tokens
     - Claude: $0.008/1k input tokens, $0.024/1k output tokens

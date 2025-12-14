@@ -2,7 +2,7 @@
 Code generator for creating code examples and explanations
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 from ..utils.llm_client import LLMClient, LLMConfig
 
 
@@ -155,7 +155,6 @@ EXPLANATION:
         }
 
         sections = response.split('\n\n')
-        current_section = None
 
         for section in sections:
             section = section.strip()

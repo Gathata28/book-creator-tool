@@ -2,7 +2,7 @@
 Grammar and style checker using LLM
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 from ..utils.llm_client import LLMClient, LLMConfig
 
 
@@ -150,7 +150,7 @@ Return ONLY the improved text.
                 try:
                     score_str = line.replace("SCORE:", "").strip()
                     result["score"] = int(score_str.split('/')[0])
-                except:
+                except (ValueError, IndexError):
                     result["score"] = 0
             elif line.startswith("-") and current_section:
                 item = line.lstrip("- ").strip()
@@ -179,7 +179,7 @@ Return ONLY the improved text.
                 try:
                     score_str = line.replace("ACCURACY_SCORE:", "").strip()
                     result["score"] = int(score_str.split('/')[0])
-                except:
+                except (ValueError, IndexError):
                     result["score"] = 0
             elif line.startswith("-") and current_section == "issues":
                 item = line.lstrip("- ").strip()
