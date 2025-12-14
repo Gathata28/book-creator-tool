@@ -15,6 +15,7 @@ from .editors.content_improver import ContentImprover
 from .editors.book_editor import BookEditor
 from .formatters.html_formatter import HTMLFormatter
 from .formatters.pdf_formatter import PDFFormatter
+from .formatters.pandoc_pdf_formatter import PandocPDFFormatter
 from .formatters.epub_formatter import EPUBFormatter
 from .formatters.markdown_formatter import MarkdownFormatter
 from .utils.llm_client import LLMClient, LLMConfig, LLMProvider
@@ -158,10 +159,12 @@ def generate(input, chapter, output, provider):
 
 @main.command()
 @click.option('--input', '-i', required=True, help='Input book file (JSON)')
-@click.option('--format', '-f', type=click.Choice(['html', 'pdf', 'epub', 'markdown']), 
+@click.option('--format', '-f', type=click.Choice(['html', 'pdf', 'epub', 'markdown', 'pdf-pandoc']), 
               default='html', help='Output format')
 @click.option('--output', '-o', help='Output file path')
-def export(input, format, output):
+@click.option('--theme', default='tango', help='Syntax highlighting theme for pdf-pandoc (tango, pygments, kate, etc.)')
+@click.option('--strict', is_flag=True, help='Strict Markdown validation for pdf-pandoc')
+def export(input, format, output, theme, strict):
     """Export book to various formats"""
     
     # Load book
@@ -171,7 +174,7 @@ def export(input, format, output):
     # Determine output path
     if not output:
         base_name = os.path.splitext(input)[0]
-        extensions = {'html': '.html', 'pdf': '.pdf', 'epub': '.epub', 'markdown': '.md'}
+        extensions = {'html': '.html', 'pdf': '.pdf', 'epub': '.epub', 'markdown': '.md', 'pdf-pandoc': '.pdf'}
         output = base_name + extensions[format]
     
     # Export based on format
@@ -183,6 +186,17 @@ def export(input, format, output):
     elif format == 'pdf':
         formatter = PDFFormatter()
         formatter.format(book, output)
+    elif format == 'pdf-pandoc':
+        try:
+            formatter = PandocPDFFormatter()
+            click.echo(f"Using Pandoc with {theme} theme for syntax highlighting")
+            formatter.format(book, output, strict_validation=strict, theme=theme)
+        except RuntimeError as e:
+            click.echo(f"✗ {str(e)}", err=True)
+            return
+        except ValueError as e:
+            click.echo(f"✗ Markdown validation error:\n{str(e)}", err=True)
+            return
     elif format == 'epub':
         formatter = EPUBFormatter()
         formatter.format(book, output)
