@@ -19,6 +19,24 @@ A comprehensive platform for crafting professional coding books with AI and Larg
 - **Technical Accuracy Review**: Verify technical correctness and identify outdated practices
 - **Automatic Fixing**: One-click grammar and style corrections
 
+### ✏️ Automated Book Editing (NEW!)
+- **Content Consistency Checking**: Detect and fix inconsistent terminology and formatting across chapters
+- **Cross-Reference Validation**: Automatically validate internal references and links
+- **Index Generation**: Create comprehensive indexes of important terms and concepts
+- **Glossary Generation**: AI-powered glossary creation for technical terms
+- **Learning Objectives**: Automatically generate learning objectives for each chapter
+- **Code Formatting**: Batch format all code examples to follow style guides (PEP 8, Google, Airbnb, etc.)
+- **Enhanced Code Comments**: Improve code examples with AI-generated helpful comments
+
+### 🌐 Extended LLM Support (NEW!)
+- **OpenAI**: GPT-4, GPT-3.5-turbo
+- **Anthropic**: Claude 3 (Opus, Sonnet, Haiku)
+- **Google**: Gemini Pro
+- **Cohere**: Command models
+- **Mistral AI**: Mistral Medium and other models
+- **HuggingFace**: Access to thousands of open-source models
+- **Ollama**: Support for local LLM models (llama2, mistral, etc.)
+
 ### 🎓 Interactive Learning Modules
 - **Code Playgrounds**: Interactive code examples with syntax highlighting
 - **Exercises with Solutions**: Step-by-step exercises with hints and complete solutions
@@ -37,7 +55,14 @@ A comprehensive platform for crafting professional coding books with AI and Larg
 
 ### Prerequisites
 - Python 3.8 or higher
-- OpenAI API key or Anthropic API key for LLM features
+- API key for at least one LLM provider:
+  - OpenAI API key
+  - Anthropic API key
+  - Google API key (for Gemini)
+  - Cohere API key
+  - Mistral API key
+  - HuggingFace API key
+  - Or use Ollama for local models (no API key needed)
 
 ### Install from Source
 
@@ -55,14 +80,29 @@ pip install -e .
 
 ### Environment Setup
 
-Set up your API keys:
+Set up your API keys (choose one or more):
 
 ```bash
 # For OpenAI
 export OPENAI_API_KEY='your-api-key-here'
 
-# OR for Anthropic Claude
+# For Anthropic Claude
 export ANTHROPIC_API_KEY='your-api-key-here'
+
+# For Google Gemini
+export GOOGLE_API_KEY='your-api-key-here'
+
+# For Cohere
+export COHERE_API_KEY='your-api-key-here'
+
+# For Mistral AI
+export MISTRAL_API_KEY='your-api-key-here'
+
+# For HuggingFace
+export HUGGINGFACE_API_KEY='your-api-key-here'
+
+# For Ollama (local models) - no API key needed, just install Ollama
+# Visit https://ollama.ai to install
 ```
 
 ## 📖 Quick Start
@@ -75,7 +115,20 @@ book-creator create \
   --chapters 12 \
   --language Python \
   --audience "intermediate developers" \
+  --provider openai \
   --output my-book.json
+
+# Or use a different LLM provider
+book-creator create \
+  --topic "Rust Programming" \
+  --provider google \
+  --output rust-book.json
+
+# Or use local models with Ollama
+book-creator create \
+  --topic "JavaScript Fundamentals" \
+  --provider ollama \
+  --output js-book.json
 ```
 
 ### 2. Generate Content
@@ -104,7 +157,32 @@ book-creator improve \
   --focus clarity
 ```
 
-### 4. Export Your Book
+### 4. Automated Book Editing (NEW!)
+
+```bash
+# Validate cross-references
+book-creator validate-references --input my-book.json
+
+# Check content consistency
+book-creator check-consistency --input my-book.json
+
+# Generate an index
+book-creator generate-index --input my-book.json
+
+# Generate a glossary of technical terms
+book-creator generate-glossary --input my-book.json --provider openai
+
+# Add learning objectives to chapters
+book-creator add-objectives --input my-book.json --provider openai
+
+# Format all code to follow a style guide
+book-creator format-code \
+  --input my-book.json \
+  --style "PEP 8" \
+  --provider openai
+```
+
+### 5. Export Your Book
 
 ```bash
 # Export to HTML

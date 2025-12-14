@@ -1,5 +1,4 @@
-openai>=1.0.0
-anthropic>=0.7.0
+# Core dependencies
 markdown>=3.5
 PyPDF2>=3.0.0
 fpdf2>=2.7.0
@@ -10,3 +9,26 @@ Jinja2>=3.1.0
 click>=8.1.0
 pyyaml>=6.0
 pygments>=2.17.0
+
+# LLM providers (install as needed)
+# OpenAI
+openai>=1.0.0
+
+# Anthropic
+anthropic>=0.7.0
+
+# Google Gemini
+google-generativeai>=0.3.0
+
+# Cohere
+cohere>=4.0.0
+
+# Mistral AI
+mistralai>=0.0.11
+
+# HuggingFace
+huggingface-hub>=0.19.0
+
+# Ollama (local models)
+ollama>=0.1.0
+

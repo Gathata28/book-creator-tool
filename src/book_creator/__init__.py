@@ -14,6 +14,7 @@ from .generators.outline_generator import OutlineGenerator
 from .generators.code_generator import CodeGenerator
 from .editors.grammar_checker import GrammarChecker
 from .editors.content_improver import ContentImprover
+from .editors.book_editor import BookEditor
 from .formatters.pdf_formatter import PDFFormatter
 from .formatters.epub_formatter import EPUBFormatter
 from .formatters.html_formatter import HTMLFormatter
@@ -27,6 +28,7 @@ __all__ = [
     "CodeGenerator",
     "GrammarChecker",
     "ContentImprover",
+    "BookEditor",
     "PDFFormatter",
     "EPUBFormatter",
     "HTMLFormatter",
