@@ -562,5 +562,155 @@ def check_consistency(input):
         click.echo("\n✓ No consistency issues found!")
 
 
+@main.command()
+@click.option('--prompt', '-p', required=True, help='Natural language prompt describing the book')
+@click.option('--output', '-o', default='output/book', help='Output file path (without extension)')
+@click.option('--format', '-f', type=click.Choice(['pdf', 'html', 'epub', 'markdown', 'pdf-pandoc']), 
+              default='pdf', help='Output format')
+@click.option('--provider', type=click.Choice(['openai', 'anthropic', 'google', 'cohere', 'mistral', 'huggingface', 'ollama']), 
+              default='openai', help='LLM provider')
+@click.option('--verbose', '-v', is_flag=True, help='Show detailed progress')
+def agentic(prompt, output, format, provider, verbose):
+    """Generate a complete book from a single prompt (Agentic-First Mode)
+    
+    This command uses the Agentic-First Mode to generate a complete book
+    autonomously from a single natural language prompt.
+    
+    Example prompts:
+    
+    \b
+    "Create a beginner-friendly Python programming book for high school students"
+    
+    \b
+    "Write an advanced machine learning guide for data scientists with
+    practical examples and exercises"
+    
+    \b
+    "Create a beginner-to-intermediate book teaching modern economics
+    for African university students, with examples and exercises"
+    """
+    from .agentic import AgenticBookGenerator
+    from .models.agentic import UserPrompt
+    
+    click.echo("🚀 Starting Agentic-First Mode book generation")
+    click.echo(f"📝 Prompt: {prompt[:100]}{'...' if len(prompt) > 100 else ''}")
+    click.echo(f"📁 Output: {output}.{format.replace('pdf-pandoc', 'pdf')}")
+    click.echo(f"🤖 Provider: {provider}")
+    click.echo()
+    
+    # Progress callback for verbose mode
+    def progress_callback(message: str, percent: float):
+        if verbose:
+            click.echo(f"[{percent:5.1f}%] {message}")
+    
+    # Configure LLM
+    llm_provider = get_provider_enum(provider)
+    llm_config = LLMConfig(provider=llm_provider)
+    llm_client = LLMClient(llm_config)
+    
+    # Create generator
+    generator = AgenticBookGenerator(
+        llm_client=llm_client,
+        progress_callback=progress_callback if verbose else None
+    )
+    
+    try:
+        # Generate book
+        click.echo("📖 Generating book...")
+        if not verbose:
+            click.echo("  (use --verbose for detailed progress)")
+        
+        # Create a modified user prompt with output format
+        book = generator.generate_from_prompt(
+            prompt=prompt,
+            output_path=output
+        )
+        
+        # Get state for summary
+        state = generator.get_state()
+        blueprint = generator.get_blueprint()
+        
+        click.echo()
+        click.echo("✅ Book generation complete!")
+        click.echo()
+        click.echo("📚 Book Summary:")
+        click.echo(f"   Title: {book.title}")
+        click.echo(f"   Author: {book.author}")
+        click.echo(f"   Chapters: {len(book.chapters)}")
+        
+        if blueprint:
+            click.echo(f"   Target Audience: {blueprint.target_audience}")
+            click.echo(f"   Complexity: {blueprint.complexity_level.value}")
+            click.echo(f"   Estimated Words: {blueprint.estimated_total_words:,}")
+        
+        click.echo()
+        click.echo("📑 Table of Contents:")
+        for chapter in book.chapters:
+            click.echo(f"   {chapter.number}. {chapter.title}")
+        
+        click.echo()
+        click.echo(f"📁 Output file: {state.output_path}")
+        
+        # Save book JSON for reference
+        json_path = output + ".json"
+        book.save(json_path)
+        click.echo(f"💾 Book data saved: {json_path}")
+        
+    except Exception as e:
+        click.echo(f"❌ Error: {str(e)}", err=True)
+        if verbose:
+            import traceback
+            click.echo(traceback.format_exc(), err=True)
+        raise click.Abort()
+
+
+@main.command()
+@click.option('--input', '-i', required=True, help='Input book JSON file')
+@click.option('--verbose', '-v', is_flag=True, help='Show detailed information')
+def show_blueprint(input, verbose):
+    """Display the book blueprint from a generated book
+    
+    Shows the planning information including learning objectives,
+    complexity levels, and chapter structure.
+    """
+    book = Book.load(input)
+    
+    if 'blueprint' not in book.metadata:
+        click.echo("⚠ No blueprint found in book metadata.")
+        click.echo("  This book may have been created with Guided Mode.")
+        return
+    
+    bp_data = book.metadata['blueprint']
+    
+    click.echo(f"\n📖 Blueprint for: {book.title}")
+    click.echo("=" * 50)
+    
+    click.echo(f"\n🎯 Target Audience: {bp_data.get('target_audience', 'N/A')}")
+    click.echo(f"📊 Complexity Level: {bp_data.get('complexity_level', 'N/A')}")
+    
+    if bp_data.get('assumed_prior_knowledge'):
+        click.echo("\n📚 Assumed Prior Knowledge:")
+        for knowledge in bp_data['assumed_prior_knowledge']:
+            click.echo(f"   • {knowledge}")
+    
+    if bp_data.get('learning_objectives'):
+        click.echo("\n🎓 Learning Objectives:")
+        for obj in bp_data['learning_objectives']:
+            if isinstance(obj, dict):
+                click.echo(f"   • {obj.get('description', obj)}")
+            else:
+                click.echo(f"   • {obj}")
+    
+    if verbose and bp_data.get('chapters'):
+        click.echo("\n📑 Chapter Details:")
+        for ch in bp_data['chapters']:
+            click.echo(f"\n   Chapter {ch.get('number', '?')}: {ch.get('title', 'N/A')}")
+            click.echo(f"   Complexity: {ch.get('complexity_level', 'N/A')}")
+            click.echo(f"   Est. Length: {ch.get('estimated_length', 0):,} words")
+            
+            if ch.get('key_concepts'):
+                click.echo(f"   Key Concepts: {', '.join(ch['key_concepts'][:5])}")
+
+
 if __name__ == '__main__':
     main()
