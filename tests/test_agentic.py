@@ -2,9 +2,6 @@
 Tests for Agentic-First Mode models and state machine.
 """
 
-import pytest
-from datetime import datetime
-
 from book_creator.models.agentic import (
     LifecycleState,
     ComplexityLevel,

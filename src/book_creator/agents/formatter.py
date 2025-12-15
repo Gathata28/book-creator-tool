@@ -12,6 +12,7 @@ Output: Final formatted assets
 Based on PRD Section 5.0.4
 """
 
+import logging
 import os
 from typing import Optional, Dict, Any
 
@@ -22,6 +23,7 @@ from ..formatters.pdf_formatter import PDFFormatter
 from ..formatters.epub_formatter import EPUBFormatter
 from ..formatters.markdown_formatter import MarkdownFormatter
 from ..utils.llm_client import LLMClient, LLMConfig
+from ..utils.json_extraction import extract_json_object
 
 
 class FormatterAgent:
@@ -34,6 +36,7 @@ class FormatterAgent:
     
     def __init__(self, llm_client: Optional[LLMClient] = None):
         self.llm_client = llm_client or LLMClient(LLMConfig())
+        self.logger = logging.getLogger(__name__)
         
         # Initialize formatters
         self._formatters = {
@@ -48,6 +51,7 @@ class FormatterAgent:
             from ..formatters.pandoc_pdf_formatter import PandocPDFFormatter
             self._formatters["pdf-pandoc"] = PandocPDFFormatter()
         except Exception:
+            # Pandoc not available; PDF formatter will be used as fallback
             pass
     
     def format_book(
@@ -183,15 +187,12 @@ Identify 10-20 key terms and provide clear definitions.
 Return as JSON object:"""
 
         try:
-            import json
-            import re
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
-            if json_match:
-                glossary = json.loads(json_match.group())
-                if isinstance(glossary, dict):
-                    return glossary
-        except (json.JSONDecodeError, AttributeError):
+            glossary = extract_json_object(response)
+            if glossary and isinstance(glossary, dict):
+                return glossary
+        except (ValueError, AttributeError):
+            # LLM response wasn't valid JSON; return empty glossary
             pass
         
         return {}
@@ -253,6 +254,9 @@ Return as JSON object:"""
                 formatter.format(book, output_path)
             else:
                 # Fall back to basic PDF
+                self.logger.warning(
+                    "Pandoc not available, falling back to basic PDF formatter"
+                )
                 formatter = self._formatters.get("pdf")
                 if formatter:
                     formatter.format(book, output_path)
@@ -265,6 +269,9 @@ Return as JSON object:"""
         
         if not formatter:
             # Default to HTML if format not supported
+            self.logger.warning(
+                f"Format '{format_type}' not supported, falling back to HTML format"
+            )
             formatter = self._formatters.get("html")
             if formatter:
                 # Adjust output path
