@@ -15,8 +15,7 @@ Based on PRD Section 5.0.1
 """
 
 import json
-import re
-from typing import Optional, List, Any
+from typing import Optional, List
 
 from ..models.agentic import (
     UserPrompt,
@@ -26,68 +25,7 @@ from ..models.agentic import (
     ComplexityLevel
 )
 from ..utils.llm_client import LLMClient, LLMConfig
-
-
-def _extract_json_object(text: str) -> Optional[dict]:
-    """
-    Extract a JSON object from text, handling nested structures.
-    
-    Uses a balanced brace approach to handle nested JSON objects.
-    """
-    # First try to find JSON by looking for balanced braces
-    start = text.find('{')
-    if start == -1:
-        return None
-    
-    depth = 0
-    end = start
-    for i, char in enumerate(text[start:], start):
-        if char == '{':
-            depth += 1
-        elif char == '}':
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-    
-    if depth != 0:
-        return None
-    
-    try:
-        return json.loads(text[start:end])
-    except json.JSONDecodeError:
-        return None
-
-
-def _extract_json_array(text: str) -> Optional[list]:
-    """
-    Extract a JSON array from text, handling nested structures.
-    
-    Uses a balanced bracket approach to handle nested arrays.
-    """
-    # First try to find JSON by looking for balanced brackets
-    start = text.find('[')
-    if start == -1:
-        return None
-    
-    depth = 0
-    end = start
-    for i, char in enumerate(text[start:], start):
-        if char == '[':
-            depth += 1
-        elif char == ']':
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-    
-    if depth != 0:
-        return None
-    
-    try:
-        return json.loads(text[start:end])
-    except json.JSONDecodeError:
-        return None
+from ..utils.json_extraction import extract_json_object, extract_json_array
 
 
 class PlannerAgent:
@@ -154,7 +92,7 @@ Return as JSON with these fields:
         
         # Parse JSON from response using balanced brace extraction
         try:
-            data = _extract_json_object(response)
+            data = extract_json_object(response)
             if data is None:
                 # Fallback to direct parsing
                 data = json.loads(response)
@@ -229,10 +167,11 @@ Return as JSON:
         response = self.llm_client.generate_text(request, system_prompt)
         
         try:
-            data = _extract_json_object(response)
+            data = extract_json_object(response)
             if data:
                 return data.get("title", f"Mastering {prompt.topic}"), data.get("description", "")
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; fall back to default title/description below
             pass
         
         return f"Mastering {prompt.topic}", f"A comprehensive guide to {prompt.topic}"
@@ -266,7 +205,7 @@ Return as JSON array:
         response = self.llm_client.generate_text(request, system_prompt)
         
         try:
-            data = _extract_json_array(response)
+            data = extract_json_array(response)
             if data and isinstance(data, list):
                 return [
                     LearningObjective(
@@ -276,6 +215,7 @@ Return as JSON array:
                     for obj in data
                 ]
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; fall back to default objectives below
             pass
         
         # Fallback objectives
@@ -298,10 +238,11 @@ Return as JSON array of strings: ["...", "...", "..."]"""
         response = self.llm_client.generate_text(request, system_prompt)
         
         try:
-            data = _extract_json_array(response)
+            data = extract_json_array(response)
             if data and isinstance(data, list):
                 return data
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; fall back to default prior knowledge below
             pass
         
         # Fallback
@@ -344,7 +285,7 @@ Return as JSON array:
         
         chapters = []
         try:
-            data = _extract_json_array(response)
+            data = extract_json_array(response)
             if data and isinstance(data, list):
                 all_concepts = []  # Track concepts for prerequisites
                 

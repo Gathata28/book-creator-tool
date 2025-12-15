@@ -14,39 +14,12 @@ Based on PRD Section 5.0.2
 """
 
 import json
-from typing import Optional, List, Dict, Set
+from typing import Optional, Dict, Set
 
 from ..models.agentic import BookBlueprint, ChapterBlueprint, ComplexityLevel
 from ..models.book import Book, Chapter, Section
 from ..utils.llm_client import LLMClient, LLMConfig
-
-
-def _extract_json_object(text: str) -> Optional[dict]:
-    """
-    Extract a JSON object from text, handling nested structures.
-    """
-    start = text.find('{')
-    if start == -1:
-        return None
-    
-    depth = 0
-    end = start
-    for i, char in enumerate(text[start:], start):
-        if char == '{':
-            depth += 1
-        elif char == '}':
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-    
-    if depth != 0:
-        return None
-    
-    try:
-        return json.loads(text[start:end])
-    except json.JSONDecodeError:
-        return None
+from ..utils.json_extraction import extract_json_object
 
 
 class AuthorAgent:
@@ -76,14 +49,8 @@ class AuthorAgent:
             programming_language=blueprint.programming_language
         )
         
-        # Store blueprint info in metadata
-        book.metadata["blueprint"] = {
-            "complexity_level": blueprint.complexity_level.value,
-            "learning_objectives": [
-                obj.description for obj in blueprint.learning_objectives
-            ],
-            "assumed_prior_knowledge": blueprint.assumed_prior_knowledge
-        }
+        # Store full blueprint in metadata for consistency with orchestrator
+        book.metadata["blueprint"] = blueprint.to_dict()
         
         # Generate preface
         book.preface = self._generate_preface(blueprint)
@@ -313,7 +280,7 @@ Generate the code example:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            return _extract_json_object(response)
+            return extract_json_object(response)
         except (json.JSONDecodeError, AttributeError):
             pass
         
@@ -349,7 +316,7 @@ Generate the exercise:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            return _extract_json_object(response)
+            return extract_json_object(response)
         except (json.JSONDecodeError, AttributeError):
             pass
         

@@ -661,7 +661,7 @@ def agentic(prompt, output, format, provider, verbose):
         if verbose:
             import traceback
             click.echo(traceback.format_exc(), err=True)
-        raise click.Abort()
+        raise click.ClickException(str(e))
 
 
 @main.command()
@@ -680,30 +680,30 @@ def show_blueprint(input, verbose):
         click.echo("  This book may have been created with Guided Mode.")
         return
     
-    bp_data = book.metadata['blueprint']
+    blueprint_data = book.metadata['blueprint']
     
     click.echo(f"\n📖 Blueprint for: {book.title}")
     click.echo("=" * 50)
     
-    click.echo(f"\n🎯 Target Audience: {bp_data.get('target_audience', 'N/A')}")
-    click.echo(f"📊 Complexity Level: {bp_data.get('complexity_level', 'N/A')}")
+    click.echo(f"\n🎯 Target Audience: {blueprint_data.get('target_audience', 'N/A')}")
+    click.echo(f"📊 Complexity Level: {blueprint_data.get('complexity_level', 'N/A')}")
     
-    if bp_data.get('assumed_prior_knowledge'):
+    if blueprint_data.get('assumed_prior_knowledge'):
         click.echo("\n📚 Assumed Prior Knowledge:")
-        for knowledge in bp_data['assumed_prior_knowledge']:
+        for knowledge in blueprint_data['assumed_prior_knowledge']:
             click.echo(f"   • {knowledge}")
     
-    if bp_data.get('learning_objectives'):
+    if blueprint_data.get('learning_objectives'):
         click.echo("\n🎓 Learning Objectives:")
-        for obj in bp_data['learning_objectives']:
+        for obj in blueprint_data['learning_objectives']:
             if isinstance(obj, dict):
                 click.echo(f"   • {obj.get('description', obj)}")
             else:
                 click.echo(f"   • {obj}")
     
-    if verbose and bp_data.get('chapters'):
+    if verbose and blueprint_data.get('chapters'):
         click.echo("\n📑 Chapter Details:")
-        for ch in bp_data['chapters']:
+        for ch in blueprint_data['chapters']:
             click.echo(f"\n   Chapter {ch.get('number', '?')}: {ch.get('title', 'N/A')}")
             click.echo(f"   Complexity: {ch.get('complexity_level', 'N/A')}")
             click.echo(f"   Est. Length: {ch.get('estimated_length', 0):,} words")

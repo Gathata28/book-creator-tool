@@ -25,34 +25,7 @@ from ..models.agentic import (
 )
 from ..models.book import Book, Chapter
 from ..utils.llm_client import LLMClient, LLMConfig
-
-
-def _extract_json_array(text: str) -> Optional[list]:
-    """
-    Extract a JSON array from text, handling nested structures.
-    """
-    start = text.find('[')
-    if start == -1:
-        return None
-    
-    depth = 0
-    end = start
-    for i, char in enumerate(text[start:], start):
-        if char == '[':
-            depth += 1
-        elif char == ']':
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-    
-    if depth != 0:
-        return None
-    
-    try:
-        return json.loads(text[start:end])
-    except json.JSONDecodeError:
-        return None
+from ..utils.json_extraction import extract_json_array
 
 
 class EditorAgent:
@@ -189,10 +162,11 @@ Return issues as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            found_issues = _extract_json_array(response)
+            found_issues = extract_json_array(response)
             if found_issues and isinstance(found_issues, list):
                 issues.extend(found_issues[:5])  # Limit to 5 issues
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; return empty issues list
             pass
         
         return issues
@@ -238,10 +212,11 @@ Return complexity issues as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            found_issues = _extract_json_array(response)
+            found_issues = extract_json_array(response)
             if found_issues and isinstance(found_issues, list):
                 issues.extend(found_issues[:3])
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; return empty issues list
             pass
         
         return issues
@@ -319,10 +294,11 @@ Return topic deviation issues as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            found_issues = _extract_json_array(response)
+            found_issues = extract_json_array(response)
             if found_issues and isinstance(found_issues, list):
                 issues.extend(found_issues[:3])
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; return empty issues list
             pass
         
         return issues
@@ -349,10 +325,11 @@ Return actionable suggestions as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            suggestions = _extract_json_array(response)
+            suggestions = extract_json_array(response)
             if suggestions and isinstance(suggestions, list):
                 return suggestions[:5]  # Limit to 5 suggestions
         except (json.JSONDecodeError, AttributeError):
+            # LLM response wasn't valid JSON; fall back to generic suggestion below
             pass
         
         # Fallback: generic suggestions based on issue types
@@ -395,10 +372,6 @@ Return actionable suggestions as JSON array:"""
         
         This method attempts to fix the issues identified during review.
         """
-        system_prompt = f"""You are an expert editor improving book content.
-Fix the following issues while maintaining the {blueprint.tone} tone
-and {chapter_bp.complexity_level.value} complexity level."""
-
         # Group issues by type and repair accordingly
         for issue in issues:
             if "too short" in issue.lower():

@@ -9,15 +9,12 @@ Based on PRD Sections 4.0 (Generation Modes) and 9.0 (Agentic Lifecycle)
 
 import logging
 from typing import Optional, Callable
-from datetime import datetime
 
 from .models.agentic import (
     LifecycleState,
     UserPrompt,
     BookBlueprint,
-    AgenticState,
-    ReviewResult,
-    ReviewStatus
+    AgenticState
 )
 from .models.book import Book
 from .agents.planner import PlannerAgent
@@ -135,6 +132,14 @@ class AgenticBookGenerator:
                 self.state.review_results = review_results
                 repair_iteration += 1
             
+            # Check if unresolved issues remain after repair loop
+            if self._needs_repair(review_results):
+                self.logger.warning(
+                    "Book exported with unresolved review issues after %d repair iterations",
+                    repair_iteration
+                )
+                book.metadata["unresolved_review_issues"] = True
+            
             # Phase 6: REVIEW -> FORMAT
             self._transition(LifecycleState.FORMAT)
             self._report_progress("Formatting book", 85)
@@ -217,6 +222,9 @@ class AgenticBookGenerator:
         """Phase 4: Review all chapters."""
         results = []
         
+        # Reset counter for this review pass (tracks reviews in current iteration)
+        review_count = 0
+        
         for chapter in book.chapters:
             # Find corresponding blueprint
             chapter_bp = None
@@ -231,7 +239,10 @@ class AgenticBookGenerator:
                 result = self.editor._basic_review(chapter)
             
             results.append(result)
-            self.state.chapters_reviewed += 1
+            review_count += 1
+        
+        # Update total reviews count
+        self.state.chapters_reviewed = review_count
         
         return results
     
