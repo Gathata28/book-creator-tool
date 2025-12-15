@@ -241,7 +241,8 @@ class AgenticBookGenerator:
             results.append(result)
             review_count += 1
         
-        # Update total reviews count
+        # Set to chapters reviewed in most recent pass (not cumulative across iterations)
+        # This represents the current state of the review process
         self.state.chapters_reviewed = review_count
         
         return results
