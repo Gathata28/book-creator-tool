@@ -14,7 +14,6 @@ Based on PRD Section 5.0.3
 """
 
 import json
-import re
 from typing import Optional, List
 
 from ..models.agentic import (
@@ -26,6 +25,34 @@ from ..models.agentic import (
 )
 from ..models.book import Book, Chapter
 from ..utils.llm_client import LLMClient, LLMConfig
+
+
+def _extract_json_array(text: str) -> Optional[list]:
+    """
+    Extract a JSON array from text, handling nested structures.
+    """
+    start = text.find('[')
+    if start == -1:
+        return None
+    
+    depth = 0
+    end = start
+    for i, char in enumerate(text[start:], start):
+        if char == '[':
+            depth += 1
+        elif char == ']':
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    
+    if depth != 0:
+        return None
+    
+    try:
+        return json.loads(text[start:end])
+    except json.JSONDecodeError:
+        return None
 
 
 class EditorAgent:
@@ -162,11 +189,9 @@ Return issues as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                found_issues = json.loads(json_match.group())
-                if isinstance(found_issues, list):
-                    issues.extend(found_issues[:5])  # Limit to 5 issues
+            found_issues = _extract_json_array(response)
+            if found_issues and isinstance(found_issues, list):
+                issues.extend(found_issues[:5])  # Limit to 5 issues
         except (json.JSONDecodeError, AttributeError):
             pass
         
@@ -213,11 +238,9 @@ Return complexity issues as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                found_issues = json.loads(json_match.group())
-                if isinstance(found_issues, list):
-                    issues.extend(found_issues[:3])
+            found_issues = _extract_json_array(response)
+            if found_issues and isinstance(found_issues, list):
+                issues.extend(found_issues[:3])
         except (json.JSONDecodeError, AttributeError):
             pass
         
@@ -296,11 +319,9 @@ Return topic deviation issues as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                found_issues = json.loads(json_match.group())
-                if isinstance(found_issues, list):
-                    issues.extend(found_issues[:3])
+            found_issues = _extract_json_array(response)
+            if found_issues and isinstance(found_issues, list):
+                issues.extend(found_issues[:3])
         except (json.JSONDecodeError, AttributeError):
             pass
         
@@ -328,11 +349,9 @@ Return actionable suggestions as JSON array:"""
 
         try:
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                suggestions = json.loads(json_match.group())
-                if isinstance(suggestions, list):
-                    return suggestions[:5]  # Limit to 5 suggestions
+            suggestions = _extract_json_array(response)
+            if suggestions and isinstance(suggestions, list):
+                return suggestions[:5]  # Limit to 5 suggestions
         except (json.JSONDecodeError, AttributeError):
             pass
         

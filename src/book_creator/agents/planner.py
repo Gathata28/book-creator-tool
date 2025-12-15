@@ -16,7 +16,7 @@ Based on PRD Section 5.0.1
 
 import json
 import re
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from ..models.agentic import (
     UserPrompt,
@@ -26,6 +26,68 @@ from ..models.agentic import (
     ComplexityLevel
 )
 from ..utils.llm_client import LLMClient, LLMConfig
+
+
+def _extract_json_object(text: str) -> Optional[dict]:
+    """
+    Extract a JSON object from text, handling nested structures.
+    
+    Uses a balanced brace approach to handle nested JSON objects.
+    """
+    # First try to find JSON by looking for balanced braces
+    start = text.find('{')
+    if start == -1:
+        return None
+    
+    depth = 0
+    end = start
+    for i, char in enumerate(text[start:], start):
+        if char == '{':
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    
+    if depth != 0:
+        return None
+    
+    try:
+        return json.loads(text[start:end])
+    except json.JSONDecodeError:
+        return None
+
+
+def _extract_json_array(text: str) -> Optional[list]:
+    """
+    Extract a JSON array from text, handling nested structures.
+    
+    Uses a balanced bracket approach to handle nested arrays.
+    """
+    # First try to find JSON by looking for balanced brackets
+    start = text.find('[')
+    if start == -1:
+        return None
+    
+    depth = 0
+    end = start
+    for i, char in enumerate(text[start:], start):
+        if char == '[':
+            depth += 1
+        elif char == ']':
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    
+    if depth != 0:
+        return None
+    
+    try:
+        return json.loads(text[start:end])
+    except json.JSONDecodeError:
+        return None
 
 
 class PlannerAgent:
@@ -90,13 +152,11 @@ Return as JSON with these fields:
 
         response = self.llm_client.generate_text(prompt, system_prompt)
         
-        # Parse JSON from response
+        # Parse JSON from response using balanced brace extraction
         try:
-            # Try to extract JSON from the response
-            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-            else:
+            data = _extract_json_object(response)
+            if data is None:
+                # Fallback to direct parsing
                 data = json.loads(response)
             
             return UserPrompt.from_dict(data)
@@ -169,9 +229,8 @@ Return as JSON:
         response = self.llm_client.generate_text(request, system_prompt)
         
         try:
-            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
+            data = _extract_json_object(response)
+            if data:
                 return data.get("title", f"Mastering {prompt.topic}"), data.get("description", "")
         except (json.JSONDecodeError, AttributeError):
             pass
@@ -207,9 +266,8 @@ Return as JSON array:
         response = self.llm_client.generate_text(request, system_prompt)
         
         try:
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
+            data = _extract_json_array(response)
+            if data and isinstance(data, list):
                 return [
                     LearningObjective(
                         description=obj.get("description", ""),
@@ -240,9 +298,9 @@ Return as JSON array of strings: ["...", "...", "..."]"""
         response = self.llm_client.generate_text(request, system_prompt)
         
         try:
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
+            data = _extract_json_array(response)
+            if data and isinstance(data, list):
+                return data
         except (json.JSONDecodeError, AttributeError):
             pass
         
@@ -286,10 +344,8 @@ Return as JSON array:
         
         chapters = []
         try:
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-                
+            data = _extract_json_array(response)
+            if data and isinstance(data, list):
                 all_concepts = []  # Track concepts for prerequisites
                 
                 for i, ch_data in enumerate(data[:num_chapters], 1):

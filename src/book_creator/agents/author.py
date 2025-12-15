@@ -13,11 +13,40 @@ Output: Chapter drafts
 Based on PRD Section 5.0.2
 """
 
+import json
 from typing import Optional, List, Dict, Set
 
 from ..models.agentic import BookBlueprint, ChapterBlueprint, ComplexityLevel
 from ..models.book import Book, Chapter, Section
 from ..utils.llm_client import LLMClient, LLMConfig
+
+
+def _extract_json_object(text: str) -> Optional[dict]:
+    """
+    Extract a JSON object from text, handling nested structures.
+    """
+    start = text.find('{')
+    if start == -1:
+        return None
+    
+    depth = 0
+    end = start
+    for i, char in enumerate(text[start:], start):
+        if char == '{':
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    
+    if depth != 0:
+        return None
+    
+    try:
+        return json.loads(text[start:end])
+    except json.JSONDecodeError:
+        return None
 
 
 class AuthorAgent:
@@ -283,12 +312,8 @@ Requirements:
 Generate the code example:"""
 
         try:
-            import json
-            import re
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
+            return _extract_json_object(response)
         except (json.JSONDecodeError, AttributeError):
             pass
         
@@ -323,12 +348,8 @@ Return as JSON:
 Generate the exercise:"""
 
         try:
-            import json
-            import re
             response = self.llm_client.generate_text(prompt, system_prompt)
-            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
+            return _extract_json_object(response)
         except (json.JSONDecodeError, AttributeError):
             pass
         

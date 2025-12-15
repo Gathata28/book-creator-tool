@@ -265,7 +265,11 @@ class BookBlueprint:
         
         created_at = datetime.now()
         if data.get("created_at"):
-            created_at = datetime.fromisoformat(data["created_at"])
+            try:
+                created_at = datetime.fromisoformat(data["created_at"])
+            except (ValueError, TypeError):
+                # If parsing fails, use current time
+                created_at = datetime.now()
         
         return cls(
             title=data.get("title", ""),
